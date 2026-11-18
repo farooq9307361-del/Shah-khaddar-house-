@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://farooq9307361-del.github.io/Shah-khaddar-house-/sitemap.xml

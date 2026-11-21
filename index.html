@@ -1399,13 +1399,33 @@ body.of-locked{overflow:hidden}
   var buttons=document.querySelectorAll('.pwa-install');
   for(var i=0;i<buttons.length;i++){
     buttons[i].addEventListener('click', function(){
-      if(deferredPrompt){
+      if(!deferredPrompt){ openHelp(); return; }
+      // Native prompt try karein, lekin hamesha fallback: agar prompt nazar na
+      // aaye, dismiss ho jaye, ya 2 second mein accept na ho to hidayat wala
+      // popup khud khul jata hai — button dabane par kabhi khamoshi nahi hoti.
+      var evt=deferredPrompt;
+      var helpShown=false;
+      function showHelpOnce(){
+        if(!helpShown){ helpShown=true; openHelp(); }
+      }
+      var timer=setTimeout(showHelpOnce, 2000);
+      try{
         var installKey='pro'+'mpt';
-        var showInstall=deferredPrompt[installKey];
-        showInstall.call(deferredPrompt);
-        deferredPrompt.userChoice.then(function(){ deferredPrompt=null; }).catch(function(){ deferredPrompt=null; });
-      } else {
-        openHelp();
+        var showInstall=evt[installKey];
+        showInstall.call(evt);
+        evt.userChoice.then(function(choice){
+          deferredPrompt=null;
+          clearTimeout(timer);
+          if(!choice || choice.outcome!=='accepted') showHelpOnce();
+        }).catch(function(){
+          deferredPrompt=null;
+          clearTimeout(timer);
+          showHelpOnce();
+        });
+      }catch(err){
+        clearTimeout(timer);
+        deferredPrompt=null;
+        showHelpOnce();
       }
     });
   }
